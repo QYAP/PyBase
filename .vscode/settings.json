@@ -1,0 +1,34 @@
+{
+    //code-runner 配置
+    "code-runner.defaultLanguage": "python",
+    "code-runner.clearPreviousOutput": true,
+    "code-runner.executorMap": {
+        "python": "set PYTHONIOENCODING=utf8 && python3 -u"
+    },
+    //python 配置
+    "python.pythonPath": "/usr/bin/python3",
+    "python.dataScience.sendSelectionToInteractiveWindow": true,
+    "python.linting.flake8Enabled": true,
+    "python.formatting.provider": "yapf",
+    "python.linting.flake8Args": [
+        "--max-line-length=128",
+        "--ignore=W191,W291,W293,W391,E125,E231,SE303,E305,E402"
+    ],
+    // "python.formatting.yapfArgs": [
+    //     "column_limit=10"
+    // ],
+    //编辑配置
+    "files.autoSave": "onFocusChange", //自动保存
+    //git配置
+    "git.enabled": true,
+    "git.autorefresh": true, //启用自动刷新
+    "git.autofetch": true, //启用自动提取
+    "git.confirmSync": true, //同步前进行确认
+    //界面样式配置
+    "editor.fontSize": 13, // 字体大小
+    "window.zoomLevel": 0, // 界面缩放
+    // "workbench.colorTheme": "Abyss",
+    "workbench.iconTheme": "vscode-icons",
+    "editor.wordWrap": "off",
+    "editor.wordWrapColumn": 160,
+}

@@ -5,17 +5,12 @@
 
 import re
 
-
-# 颜色体
-# 实现单例模式
-def singleton(cls):
-    instance = cls()
-    instance.__call__ = lambda: instance
-    return instance
+# from ..build_in import singleton
 
 
-@singleton
+# @singleton
 class Color():
+    NOTSET = None
     RED = '0;31m'  # 红（用于error）
     GREEN = '0;32m'  # 绿（用于info）
     YELLOW = '0;33m'  # 黄（用于warn）
@@ -40,8 +35,14 @@ class Color():
 
     @classmethod
     def color(cls, target_str: str, color_type: str) -> str:
-        return '%s%s%s%s' % (cls.COLOR_START, color_type, target_str, cls.COLOR_EDN)
+        if color_type is None:
+            return target_str
+        else:
+            return '%s%s%s%s' % (cls.COLOR_START, color_type, target_str, cls.COLOR_EDN)
 
     @staticmethod
     def clean(target_str: str) -> str:
         return re.sub('\\033\[[\s\S]*?m{1}', '', target_str)
+
+
+

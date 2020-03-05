@@ -8,11 +8,12 @@
 @Contact :   1792970452@qq.com
 @WebSite :   ***
 '''
+import logging
 # Start typing your code from here
 from flask import Flask
-from app.libs.args_validator.flask_plus_in import args_validator
-from app.libs.args_validator.__type import Type, Number
-from app.libs.args_validator import Required, Default
+# from app.libs.args_validator.flask_plus_in import args_validator
+# from app.libs.args_validator.__type import Type, Number
+# from app.libs.args_validator import Required, Default
 app = Flask(__name__)
 
 # def arg_validator(func):
@@ -33,7 +34,7 @@ app = Flask(__name__)
 
 
 @app.route("/hello-world", methods=["GET", "POST"])
-@args_validator(rule={"a": Number, Required("b"): Type(str), "c": int}, redundant_max_num=0)
+# @args_validator(rule={"a": Number, Required("b"): Type(str), "c": int}, redundant_max_num=0)
 def hello_world():
     return "Hello World!!!"
 

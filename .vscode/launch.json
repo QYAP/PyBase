@@ -1,0 +1,23 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        
+
+        {
+            "name": "Python: 当前文件",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}", // 运行入口文件${file}表示当前文件，${workspaceFolder}表示项目根目录
+            "args": [], // 入口文件启动附带的命令参数
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python: Flask项目",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}\\manager.py", // 运行入口文件${file}表示当前文件，${workspaceFolder}表示项目根目录
+            "args": [], // 入口文件启动附带的命令参数
+            "console": "integratedTerminal"
+        }
+    ]
+}
