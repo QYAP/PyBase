@@ -10,13 +10,17 @@
 '''
 
 # Start typing your code from here
-# from .color import Color
+from .level import Level
+from .color import Color
+from .recorder import Recorder
+from .handle import ConsoleHandle
 from ..build_in import singleton
 '''
     filter_level: notset 0 debug 10 info 20 warn 30 error 40 critical 50 
     config = {
-        "Logger_id": str,
+        "logger_id": str,
         "level": int,
+        "format": str,
         "color": {
             "notset": str,
             "debug": str,
@@ -25,7 +29,6 @@ from ..build_in import singleton
             "error": str,
             "fatal": str
         },
-        "format": str,
         "buffer_size"：int,
         "handles": [
             {
@@ -65,6 +68,21 @@ from ..build_in import singleton
 
 @singleton
 class Factory():
+    DEFAULT_LEVEL = Level.NOTSET
+    DEFAULT_FROMAT = "%s"
+    DEFAULT_COLOR = {
+        'NOTSET': Color.NOTSET,
+        'INFO': Color.NOTSET,
+        'DEBUG': Color.NOTSET,
+        'WARN': Color.NOTSET,
+        'ERROR': Color.NOTSET,
+        'FATAL': Color.NOTSET,
+    }
+    DEFAULT_BUFFER_SIZE = None
+    DEFAULT_HANDLES = [{"handle_model": ConsoleHandle}]
+    DEFAULT_HANDLE_ID = "%s-%s"
+
+    LOGGER_CONTAINER = {}
     '''
         01,校验config以及不全缺省默认配置
         02,检查或者生成logge 实例id
@@ -74,11 +92,74 @@ class Factory():
     def __init__(self):
         super().__init__()
 
-    def _validate(self):
+    def _validate(self, config: dict):
+        '''
+            01，参数校验
+            02，检查id是否重复
+        '''
         pass
 
     def _generate_logger_id(self):
-        pass
+        return "abc"
+
+    def _standardizing(self, config: dict):
+        '''
+            1，检查或生成id
+            2，检查或设置默认level
+            3，检查或设置默认format
+            4，检查或设置默认color
+            5，检查或设置默认buffer-size
+            6，检查或设置默认handle
+        '''
+        # 检查并生成logger-id
+        if config.get("logger_id"):
+            if config["logger_id"] in self.CONTAINER.keys():
+                raise Exception("logger-config error,logger-id duplicate!")
+        else:
+            config["logger_id"] = self._generate_logger_id()
+
+        # 检查或设置默认level
+        if config.get("level"):
+            if config["level"] > Level.FATAL:
+                raise Exception("logger-config error,level > fatal!")
+        else:
+            config["level"] = self.DEFAULT_LEVEL
+
+        # 检查或设置默认format
+        if config.get("format"):
+            pass
+        else:
+            config["format"] = self.DEFAULT_FROMAT
+
+        # 检查或设置默认color
+        config["color"] = dict(self.DEFAULT_COLOR, **config["color"])
+
+        # 检查或设置默认buffer-size
+        if not config.get("buffer_size"):
+            config["buffer_size"] = None
+
+        # 检查或设置默认handle-config
+        if config.get("handles") or len(config["handles"]) == 0:
+            config["handles"] = self.DEFAULT_HANDLES
+
+        handle_ids = set({})
+        for i, h_item in config["handles"]:
+            # 检查或设置handle-config 默认id
+            if not h_item.get("handle_id"):
+                h_item["handle_id"] = self.DEFAULT_HANDLE_ID % (h_item["handle_model"].name, str(i))
+            handle_ids.add(h_item["handle_id"])
+            # 检查或设置handle-config filter level
+            if h_item.get("filter_level"):
+                if h_item.get("filter_level") > Level.FATAL:
+                    raise Exception("handle-config error,level > fatal!")
+            else:
+                h_item["filter_level"] = config["level"]
+
+        # 检查handle-id 重复问题
+        if len(handle_ids) != len(config["handles"]):
+            raise Exception("handle-config error,id duplicate or use reserved naming format(handle-name + num)")
+
+        return config
 
     def _register_logger(self):
         pass
@@ -87,89 +168,64 @@ class Factory():
         pass
 
     def new(self, config: dict):
-        logger_id = config.get("Logger_id")
-        color = config.get("color")
-        formater = config.get("format")
-        global_filter = config.get("level")
-        handles = config.get("handles")
-        self.validate()
-        return Logger(logger_id, color, formater, global_filter, handles)
+        # 校验config
+        self._validate(config)
+        # 补充并规范化config
+        stardard_config = self._standardizing(config)
+        # 生成logger
+        logger = Logger(**stardard_config)
+        self.LOGGER_CONTAINER[logger.id] = logger
 
 
 class Logger():
     '''
+        00，检查并标准化handles
         01, 全局过滤器过滤
         02，获取format item属性值
         03，组成recorder
         03, handles-distributer 分发recorder
 
     '''
-    def __init__(self, logger_id: str, color_config: dict, formater: dict, global_filter: int, handle_configs: list):
+    def __init__(self, logger_id: str, level: int, color: dict, format: dict, handles: list):
         self.id = logger_id
-        self.color = color_config
-        self.formater = formater
-        self.handles = []
-        for item in handle_configs:
-            pass
+        self.color = color
+        self.global_filter = level
+        self.formater = format
+        self.handle_container = {}
+        for h_config_i in handles:
+            self.handle_container[h_config_i["handle_id"]] = h_config_i["handle_model"](**h_config_i)
 
-    def _global_filter(self):
+    def _global_filter(self, level: int):
+        if level < self.global_filter:
+            return False
+        else:
+            return True
+
+    def _generate_recorder(self, msg):
         pass
 
-    def _generate_recorder(self):
+    def _dispatcher(self, recorder: Recorder):
         pass
 
-    def _dispatcher(self):
-        pass
+    def _log(self, level: int, msg: str):
+        if self._global_filter(level):
+            recorder = self._generate_recorder(msg)
+            self._dispatcher(recorder)
 
     def info(self, msg: str):
-        pass
+        self._log(Level.INFO, msg)
 
     def debug(self, msg: str):
-        pass
+        self._log(Level.DEBUG, msg)
 
     def warn(self, msg: str):
-        pass
+        self._log(Level.WARN, msg)
 
     def error(self, msg: str):
-        pass
+        self._log(Level.ERROR, msg)
 
     def fatal(self, msg: str):
-        pass
+        self._log(Level.FATAL, msg)
 
     def destroy(self):
-        pass
-
-
-class Recorder():
-    '''
-        args:
-
-    '''
-    pass
-
-
-class BaseHandle():
-    '''
-        01，handle 过滤器
-        02，handle 格式化
-        03，handle 染色
-        04，进入buffer队列
-        05，输出到终端
-    '''
-    def _filter(self):
-        pass
-
-    def _format(self):
-        pass
-
-    def _color(self):
-        pass
-
-    def _buffer(self):
-        pass
-
-    def _export(self):
-        pass
-
-    def work(self):
         pass
