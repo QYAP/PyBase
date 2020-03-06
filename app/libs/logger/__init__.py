@@ -66,6 +66,60 @@ from ..build_in import singleton
     '''
 
 
+class Logger():
+    '''
+        00，检查并标准化handles
+        01, 全局过滤器过滤
+        02，获取format item属性值
+        03，组成recorder
+        03, handles-distributer 分发recorder
+
+    '''
+    def __init__(self, logger_id: str, level: int, color: dict, format: dict, handles: list):
+        self.id = logger_id
+        self.color = color
+        self.global_filter = level
+        self.formater = format
+        self.handle_container = {}
+        for h_config_i in handles:
+            self.handle_container[h_config_i["handle_id"]] = h_config_i["handle_model"](**h_config_i)
+
+    def _global_filter(self, level: int):
+        if level < self.global_filter:
+            return False
+        else:
+            return True
+
+    def _generate_recorder(self, msg):
+        pass
+
+    def _dispatcher(self, recorder: Recorder):
+        pass
+
+    def _log(self, level: int, msg: str):
+        if self._global_filter(level):
+            recorder = self._generate_recorder(msg)
+            self._dispatcher(recorder)
+
+    def info(self, msg: str):
+        self._log(Level.INFO, msg)
+
+    def debug(self, msg: str):
+        self._log(Level.DEBUG, msg)
+
+    def warn(self, msg: str):
+        self._log(Level.WARN, msg)
+
+    def error(self, msg: str):
+        self._log(Level.ERROR, msg)
+
+    def fatal(self, msg: str):
+        self._log(Level.FATAL, msg)
+
+    def destroy(self):
+        Factory.log_out(self)
+
+
 @singleton
 class Factory():
     DEFAULT_LEVEL = Level.NOTSET
@@ -83,6 +137,23 @@ class Factory():
     DEFAULT_HANDLE_ID = "%s-%s"
 
     LOGGER_CONTAINER = {}
+
+    LEGAL_CONFIG_FORMAT = {
+        "logger_id": str,
+        "level": int,
+        "format": str,
+        "color": {
+            "notset": str,
+            "debug": str,
+            "info": str,
+            "warn": str,
+            "error": str,
+            "fatal": str
+        },
+        "buffer_size": int,
+        "handles": list
+    }
+    LEGAL_HANDLE_CONFIG_FORMAT = [{}]
     '''
         01,校验config以及不全缺省默认配置
         02,检查或者生成logge 实例id
@@ -161,71 +232,20 @@ class Factory():
 
         return config
 
-    def _register_logger(self):
-        pass
+    def _register_logger(self, logger: Logger):
+        self.LOGGER_CONTAINER[logger.id] = logger
+        return logger
 
-    def log_out(self):
-        pass
+    def log_out(self, logger: Logger):
+        if self.LOGGER_CONTAINER.pop(logger.id, None):
+            return True
+        else:
+            return False
 
     def new(self, config: dict):
         # 校验config
         self._validate(config)
         # 补充并规范化config
         stardard_config = self._standardizing(config)
-        # 生成logger
-        logger = Logger(**stardard_config)
-        self.LOGGER_CONTAINER[logger.id] = logger
-
-
-class Logger():
-    '''
-        00，检查并标准化handles
-        01, 全局过滤器过滤
-        02，获取format item属性值
-        03，组成recorder
-        03, handles-distributer 分发recorder
-
-    '''
-    def __init__(self, logger_id: str, level: int, color: dict, format: dict, handles: list):
-        self.id = logger_id
-        self.color = color
-        self.global_filter = level
-        self.formater = format
-        self.handle_container = {}
-        for h_config_i in handles:
-            self.handle_container[h_config_i["handle_id"]] = h_config_i["handle_model"](**h_config_i)
-
-    def _global_filter(self, level: int):
-        if level < self.global_filter:
-            return False
-        else:
-            return True
-
-    def _generate_recorder(self, msg):
-        pass
-
-    def _dispatcher(self, recorder: Recorder):
-        pass
-
-    def _log(self, level: int, msg: str):
-        if self._global_filter(level):
-            recorder = self._generate_recorder(msg)
-            self._dispatcher(recorder)
-
-    def info(self, msg: str):
-        self._log(Level.INFO, msg)
-
-    def debug(self, msg: str):
-        self._log(Level.DEBUG, msg)
-
-    def warn(self, msg: str):
-        self._log(Level.WARN, msg)
-
-    def error(self, msg: str):
-        self._log(Level.ERROR, msg)
-
-    def fatal(self, msg: str):
-        self._log(Level.FATAL, msg)
-
-    def destroy(self):
-        pass
+        # 生成并注册logger
+        return self._register_logger(Logger(**stardard_config))

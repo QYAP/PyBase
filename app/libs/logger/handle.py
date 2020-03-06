@@ -10,9 +10,15 @@
 '''
 # Start typing your code from here
 
+from collections import deque
+
+from .recorder import Recorder
+from .color import Color
+
 
 class BaseHandle():
     Name = "BaseHandle"
+    DEFAULT_BUFFER = 0
     '''
         01，handle 过滤器
         02，handle 格式化
@@ -20,24 +26,81 @@ class BaseHandle():
         04，进入buffer队列
         05，输出到终端
     '''
-    def _filter(self):
-        pass
+    def __init__(self, handle_id: str, filter_level: int, buffer_size: int, *args, **kwargs):
+        self.handle_id = handle_id
+        self.filter_level = filter_level
+        self.buffer_size = buffer_size
+        if buffer_size >= 0:
+            self.buffer = deque(maxlen=self.buffer_size)
+        else:
+            self.buffer = deque(maxlen=self.DEFAULT_BUFFER)
 
-    def _format(self):
-        pass
+    def _filter(self, recorder: Recorder):
+        if recorder.level >= self.filter_level:
+            return True
+        else:
+            return False
 
     def _color(self):
         pass
 
-    def _buffer(self):
+    def _copy(self):
+        return list(self.buffer.copy())
+
+    def _clear(self):
+        self.buffer.clear()
+        return True
+
+    def _dump(self):
+        res = self._copy()
+        self._clear()
+        return res
+
+    def push(self, value):
+        self.buffer.append(value)
+
+    def _full(self):
+        if len(self.buffer) == self.buffer.maxlen:
+            return True
+        else:
+            return False
+
+    def _auto_push(self, rec: Recorder):
+        if self.buffer.maxlen > 0:
+            if self.buffer._full():
+                recs = self.buffer._dump()
+                self.buffer._push(rec)
+                return recs
+            else:
+                self.buffer._push(rec)
+                return []
+        else:
+            return [rec]
+
+    def _export(self, recs: list, color_func: object = None):
         pass
 
-    def _export(self):
-        pass
-
-    def work(self):
-        pass
+    def work(self, recorder: Recorder):
+        if self._filter(recorder):
+            self._export(self._auto_push(recorder), self._color)
 
 
 class ConsoleHandle(BaseHandle):
     NAME = "ConsoleHandle"
+    DEFAULT_BUFFER = 0
+
+    def __init__(self, handle_id, filter_level, buffer_size, color_or_not: bool, *args, **kwargs):
+        self.color_or_not = color_or_not
+        super().__init__(handle_id, filter_level, buffer_size, *args, **kwargs)
+
+    def _color(self, recs: list):
+        if self.color_or_not:
+            for item in recs:
+                item.format = Color.dye(item.format, Color.get_color_by_name(item.color_name))
+
+    def _export(self, recs: list, color_func: object = None):
+        if color_func:
+            color_func(recs)
+
+        for item in recs:
+            print(item.format)
