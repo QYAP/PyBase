@@ -14,7 +14,7 @@ from .level import Level
 from .color import Color
 from .recorder import Recorder
 from .handle import ConsoleHandle
-from ..build_in import singleton
+# from ..build_in import singleton
 '''
     filter_level: notset 0 debug 10 info 20 warn 30 error 40 critical 50 
     config = {
@@ -22,12 +22,12 @@ from ..build_in import singleton
         "level": int,
         "format": str,
         "color": {
-            "notset": str,
-            "debug": str,
-            "info": str,
-            "warn": str,
-            "error": str,
-            "fatal": str
+            "NOTSET": str,
+            "DEBUG": str,
+            "INFO": str,
+            "WARN": str,
+            "ERROR": str,
+            "FATAL": str
         },
         "buffer_size"：int,
         "handles": [
@@ -75,7 +75,7 @@ class Logger():
         03, handles-distributer 分发recorder
 
     '''
-    def __init__(self, logger_id: str, level: int, color: dict, format: dict, handles: list):
+    def __init__(self, logger_id: str, level: int, color: dict, format: dict, handles: list, *args, **kwargs):
         self.id = logger_id
         self.color = color
         self.global_filter = level
@@ -90,15 +90,16 @@ class Logger():
         else:
             return True
 
-    def _generate_recorder(self, msg):
-        pass
+    def _generate_recorder(self, level: int, msg: str):
+        return Recorder(msg, level, self.formater, self.color.get(Level.get_name(level)))
 
     def _dispatcher(self, recorder: Recorder):
-        pass
+        for h_name in self.handle_container.keys():
+            self.handle_container[h_name].work(recorder)
 
     def _log(self, level: int, msg: str):
         if self._global_filter(level):
-            recorder = self._generate_recorder(msg)
+            recorder = self._generate_recorder(level, msg)
             self._dispatcher(recorder)
 
     def info(self, msg: str):
@@ -120,17 +121,17 @@ class Logger():
         Factory.log_out(self)
 
 
-@singleton
+# @singleton
 class Factory():
     DEFAULT_LEVEL = Level.NOTSET
     DEFAULT_FROMAT = "%s"
     DEFAULT_COLOR = {
         'NOTSET': Color.NOTSET,
         'INFO': Color.NOTSET,
-        'DEBUG': Color.NOTSET,
-        'WARN': Color.NOTSET,
-        'ERROR': Color.NOTSET,
-        'FATAL': Color.NOTSET,
+        'DEBUG': Color.BLUE,
+        'WARN': Color.YELLOW,
+        'ERROR': Color.RED,
+        'FATAL': Color.RED,
     }
     DEFAULT_BUFFER_SIZE = None
     DEFAULT_HANDLES = [{"handle_model": ConsoleHandle}]
@@ -171,7 +172,7 @@ class Factory():
         pass
 
     def _generate_logger_id(self):
-        return "abc"
+        return "test_id"
 
     def _standardizing(self, config: dict):
         '''
@@ -203,21 +204,21 @@ class Factory():
             config["format"] = self.DEFAULT_FROMAT
 
         # 检查或设置默认color
-        config["color"] = dict(self.DEFAULT_COLOR, **config["color"])
+        config["color"] = dict(self.DEFAULT_COLOR, **config.get("color", {}))
 
         # 检查或设置默认buffer-size
         if not config.get("buffer_size"):
             config["buffer_size"] = None
 
         # 检查或设置默认handle-config
-        if config.get("handles") or len(config["handles"]) == 0:
+        if config.get("handles") is None or len(config["handles"]) == 0:
             config["handles"] = self.DEFAULT_HANDLES
 
         handle_ids = set({})
-        for i, h_item in config["handles"]:
+        for i, h_item in enumerate(config["handles"]):
             # 检查或设置handle-config 默认id
             if not h_item.get("handle_id"):
-                h_item["handle_id"] = self.DEFAULT_HANDLE_ID % (h_item["handle_model"].name, str(i))
+                h_item["handle_id"] = self.DEFAULT_HANDLE_ID % (h_item["handle_model"].NAME, str(i))
             handle_ids.add(h_item["handle_id"])
             # 检查或设置handle-config filter level
             if h_item.get("filter_level"):

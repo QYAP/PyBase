@@ -89,18 +89,19 @@ class ConsoleHandle(BaseHandle):
     NAME = "ConsoleHandle"
     DEFAULT_BUFFER = 0
 
-    def __init__(self, handle_id, filter_level, buffer_size, color_or_not: bool, *args, **kwargs):
+    def __init__(self, handle_id: str, filter_level: str, buffer_size: int = None, color_or_not: bool = True, *args, **kwargs):
+        if buffer_size is None:
+            buffer_size = self.DEFAULT_BUFFER
         self.color_or_not = color_or_not
         super().__init__(handle_id, filter_level, buffer_size, *args, **kwargs)
 
     def _color(self, recs: list):
         if self.color_or_not:
             for item in recs:
-                item.format = Color.dye(item.format, Color.get_color_by_name(item.color_name))
+                item.format_msg = Color.dye(item.format_msg, Color.get_color_by_name(item.color_name))
 
     def _export(self, recs: list, color_func: object = None):
         if color_func:
             color_func(recs)
-
         for item in recs:
-            print(item.format)
+            print(item.format_msg)

@@ -24,8 +24,8 @@ class Level():
 
     _nameToLevel = {
         'NOTSET': NOTSET,
-        'INFO': INFO,
         'DEBUG': DEBUG,
+        'INFO': INFO,
         'WARN': WARN,
         'ERROR': ERROR,
         'FATAL': FATAL,
@@ -33,9 +33,13 @@ class Level():
 
     _intToName = {
         0: 'NOTSET',
-        10: 'INFO',
-        20: 'DEBUG',
+        10: 'DEBUG',
+        20: 'INFO',
         30: 'WARN',
         40: 'ERROR',
         50: 'FATAL',
     }
+
+    @classmethod
+    def get_name(cls, level_num: int):
+        return cls._intToName.get(level_num, "NOTSET")

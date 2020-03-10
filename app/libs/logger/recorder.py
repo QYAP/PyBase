@@ -11,6 +11,9 @@
 import os
 import threading
 
+from .level import Level
+from .color import Color
+
 
 # Start typing your code from here
 class Recorder():
@@ -32,16 +35,18 @@ class Recorder():
             process_id:进程id
 
     '''
-    def __init__(self, msg: str, level: str, format: str, color: str):
+    def __init__(self, msg: str, level: int, format: str, color: int):
 
         self.message = msg
         self.level = level
-        self.level_name = level
-        self.format = str
-        self.color_name = color
+        self.level_name = Level.get_name(self.level)
+        self.format = format
+        self.color = color
+        self.color_name = Color.get_name_by_color(self.color)
+        self.format_msg = "test_format_msg"
 
         # 获取代码位置信息
-        code_location = self.get_code_location
+        code_location = self.get_code_location()
         self.line_no = code_location.get("line_no")
         self.func_name = code_location.get("func_name")
         self.module = code_location.get("module")
@@ -54,8 +59,6 @@ class Recorder():
         self.thread_name = t.getName()
         self.process_id = os.getpid()
 
-        self.format_msg = "test_format_msg"
-
     def get_code_location(self):
         return {
             "line_no": 1,
@@ -66,4 +69,17 @@ class Recorder():
         }
 
     def json(self):
-        return {}
+        res = {
+            "message": self.message,
+            "level": self.level,
+            "level_name": self.level_name,
+            "color": self.color,
+            "color_name":self.color_name,
+            "format_msg": self.format_msg,
+            "line_no": 1,
+            "func_name": "test_func_name",
+            "module": "test_module",
+            "file_name": "test_file_name",
+            "path": "test_path"
+        }
+        return res

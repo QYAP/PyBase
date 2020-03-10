@@ -45,7 +45,7 @@ class Color():
         return re.sub('\\033\[[\s\S]*?m{1}', '', target_str)
 
     @classmethod
-    def get_name_by_color(cls, color_name: str):
+    def get_name_by_color(cls, color: int):
         color_to_name = {
             cls.NOTSET: "NOTSET",
             cls.RED: 'RED',
@@ -62,7 +62,8 @@ class Color():
             cls.LIGHT_BLUE: 'LIGHT_BLUE',
             cls.LIGHT_PURPLE: 'LIGHT_PURPLE'
         }
-        return color_to_name.get(color_name)
+
+        return color_to_name.get(color, "NOTESET")
 
     @classmethod
     def get_color_by_name(cls, color_name: str):
@@ -82,7 +83,8 @@ class Color():
             'LIGHT_BLUE': cls.LIGHT_BLUE,
             'LIGHT_PURPLE': cls.LIGHT_PURPLE
         }
+
         return name_to_color.get(color_name)
 
 
-print(Color.dye("test", Color.BLUE))
+# print(Color.dye("test", Color.BLUE))
