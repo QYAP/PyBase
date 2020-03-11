@@ -9,10 +9,26 @@
 @WebSite :   ***
 '''
 import os
+import sys
 import threading
 
 from .level import Level
-from .color import Color
+
+
+def currentframe():
+    return sys._getframe(6)
+
+
+# if hasattr(sys, '_getframe'):
+#     currentframe = lambda: sys._getframe(6)
+# else:
+
+#     def currentframe():
+#         """Return the frame object for the caller's stack frame."""
+#         try:
+#             raise Exception
+#         except Exception:
+#             return sys.exc_info()[2].tb_frame.f_back
 
 
 # Start typing your code from here
@@ -35,15 +51,13 @@ class Recorder():
             process_id:进程id
 
     '''
-    def __init__(self, msg: str, level: int, format: str, color: int):
+    def __init__(self, msg: str, level: int, formater: str, color: int):
 
         self.message = msg
         self.level = level
         self.level_name = Level.get_name(self.level)
-        self.format = format
+        self.formater = formater
         self.color = color
-        self.color_name = Color.get_name_by_color(self.color)
-        self.format_msg = "test_format_msg"
 
         # 获取代码位置信息
         code_location = self.get_code_location()
@@ -54,32 +68,34 @@ class Recorder():
         self.path = code_location.get("path")
 
         # 获取进程线程信息
-        t = threading.currentThread()
-        self.thread_id = t.ident
-        self.thread_name = t.getName()
+        t_attribute = threading.currentThread()
+        self.thread_id = t_attribute.ident
+        self.thread_name = t_attribute.getName()
         self.process_id = os.getpid()
-
-    def get_code_location(self):
-        return {
-            "line_no": 1,
-            "func_name": "test_func_name",
-            "module": "test_module",
-            "file_name": "test_file_name",
-            "path": "test_path"
-        }
-
-    def json(self):
-        res = {
+        self.attribute_json = {
             "message": self.message,
             "level": self.level,
             "level_name": self.level_name,
             "color": self.color,
-            "color_name":self.color_name,
-            "format_msg": self.format_msg,
-            "line_no": 1,
-            "func_name": "test_func_name",
-            "module": "test_module",
-            "file_name": "test_file_name",
-            "path": "test_path"
+            "line_no": self.line_no,
+            "func_name": self.func_name,
+            "module": self.module,
+            "file_name": self.file_name,
+            "path": self.path
         }
-        return res
+        self.format_msg = self.formater % self.attribute_json
+        self.attribute_json["format_msg"] = self.format_msg
+
+    def get_code_location(self):
+        f = currentframe()
+        code_location = f.f_code
+        return {
+            "line_no": f.f_lineno,
+            "func_name": code_location.co_name,
+            "module": code_location.co_name,
+            "file_name": code_location.co_filename,
+            "path": code_location.co_filename
+        }
+
+    def json(self):
+        return self.attribute_json

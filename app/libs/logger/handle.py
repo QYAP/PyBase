@@ -12,8 +12,10 @@
 
 from collections import deque
 
+
+from ..utils.console_color import ConsoleColor
+
 from .recorder import Recorder
-from .color import Color
 
 
 class BaseHandle():
@@ -56,7 +58,7 @@ class BaseHandle():
         self._clear()
         return res
 
-    def push(self, value):
+    def _push(self, value):
         self.buffer.append(value)
 
     def _full(self):
@@ -98,7 +100,7 @@ class ConsoleHandle(BaseHandle):
     def _color(self, recs: list):
         if self.color_or_not:
             for item in recs:
-                item.format_msg = Color.dye(item.format_msg, Color.get_color_by_name(item.color_name))
+                item.format_msg = ConsoleColor.dye(item.format_msg, ConsoleColor.get_color(item.color))
 
     def _export(self, recs: list, color_func: object = None):
         if color_func:
