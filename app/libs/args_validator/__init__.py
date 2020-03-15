@@ -3,7 +3,7 @@
 # Datetime  : 2019/7/23 16:31
 # Project   : RBAC
 
-from .__type import BaseType, Type
+from ._type import BaseType, Type
 
 
 # 基本key约束，转成tupple处理，0，1分别表示可缺省

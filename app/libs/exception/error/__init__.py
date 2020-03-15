@@ -25,6 +25,7 @@ class BaseError(Exception):
     def __str__(self):
         formater = "[CODE:%(code)d]%(error_info)s%(msg)s"
         data = {"code": self.CODE, "error_info": "", "msg": " >>> %s" % self.msg if self.msg else self.msg}
+        # 获取继承树并获取拼接所有字符串属性值
         for item in reversed(getmro(type(self))[0:-1]):
             attributes = reflect_attr(item)
             for k, v in attributes.items():

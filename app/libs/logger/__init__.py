@@ -59,9 +59,7 @@ from .handle import ConsoleHandle
         %(threadName)s      
         %(process)d         
         %(message)s    
-        %(pathname)s        
-        %(filename)s        
-        %(module)s 
+        %(pathname)s               
         %(funcName)s         
     '''
 
@@ -105,38 +103,38 @@ class Logger():
         for h_config_i in handles:
             self.handle_container[h_config_i["handle_id"]] = h_config_i["handle_model"](**h_config_i)
 
-    def __global_filter(self, level: int):
+    def _global_filter(self, level: int):
         if level < self.global_filter:
             return False
         else:
             return True
 
-    def __generate_recorder(self, level: int, msg: str):
+    def _generate_recorder(self, level: int, msg: str):
         return Recorder(msg, level, self.formater, self.color.get(Level.get_name(level)))
 
-    def __dispatcher(self, recorder: Recorder):
+    def _dispatcher(self, recorder: Recorder):
         for h_name in self.handle_container.keys():
             self.handle_container[h_name].work(recorder)
 
-    def __log(self, level: int, msg: str):
-        if self.__global_filter(level):
-            recorder = self.__generate_recorder(level, msg)
-            self.__dispatcher(recorder)
+    def _log(self, level: int, msg: str):
+        if self._global_filter(level):
+            recorder = self._generate_recorder(level, msg)
+            self._dispatcher(recorder)
 
     def info(self, msg: str):
-        self.__log(Level.INFO, msg)
+        self._log(Level.INFO, msg)
 
     def debug(self, msg: str):
-        self.__log(Level.DEBUG, msg)
+        self._log(Level.DEBUG, msg)
 
     def warn(self, msg: str):
-        self.__log(Level.WARN, msg)
+        self._log(Level.WARN, msg)
 
     def error(self, msg: str):
-        self.__log(Level.ERROR, msg)
+        self._log(Level.ERROR, msg)
 
     def fatal(self, msg: str):
-        self.__log(Level.FATAL, msg)
+        self._log(Level.FATAL, msg)
 
     def destroy(self):
         Factory.log_out(self)
@@ -144,6 +142,9 @@ class Logger():
 
 @singleton
 class Factory():
+    '''
+     生成Logger实例
+    '''
     DEFAULT_LEVEL = Level.NOTSET
     DEFAULT_FROMATER = "%(message)s"
     DEFAULT_COLOR = {
@@ -185,17 +186,17 @@ class Factory():
     def __init__(self):
         super().__init__()
 
-    def __validate(self, config: dict):
+    def _validate(self, config: dict):
         '''
             01，参数校验
             02，检查id是否重复
         '''
         pass
 
-    def __generate_logger_id(self):
+    def _generate_logger_id(self):
         return "test_id"
 
-    def __standardizing(self, config: dict):
+    def _standardizing(self, config: dict):
         '''
             1，检查或生成id
             2，检查或设置默认level
@@ -209,7 +210,7 @@ class Factory():
             if config["logger_id"] in self.CONTAINER.keys():
                 raise Exception("logger-config error,logger-id duplicate!")
         else:
-            config["logger_id"] = self.__generate_logger_id()
+            config["logger_id"] = self._generate_logger_id()
 
         # 检查或设置默认level
         if config.get("level"):
@@ -252,7 +253,7 @@ class Factory():
 
         return config
 
-    def __register_logger(self, logger: Logger):
+    def _register_logger(self, logger: Logger):
         self.LOGGER_CONTAINER[logger.id] = logger
         return logger
 
@@ -264,8 +265,8 @@ class Factory():
 
     def new(self, config: dict):
         # 校验config
-        self.__validate(config)
+        self._validate(config)
         # 补充并规范化config
-        stardard_config = self.__standardizing(config)
+        stardard_config = self._standardizing(config)
         # 生成并注册logger
-        return self.__register_logger(Logger(**stardard_config))
+        return self._register_logger(Logger(**stardard_config))

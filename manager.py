@@ -36,9 +36,8 @@ class InvalidUsage(Exception):
         return rv
 
 
-@app.errorhandler(InvalidUsage)
+@app.errorhandler(Exception)
 def handle_invalid_usage(error):
-    print("***************")
     print(DBError())
     print(DuplicateError("Mongodb"))
     response = jsonify(error.to_dict())
